@@ -261,7 +261,6 @@ export const CustomizerPanel = () => {
       {/* 3D / Live Preview Area */}
       <div className="flex flex-col items-center justify-center bg-slate-950 rounded-2xl p-6 relative overflow-hidden">
         {/* Animated Grid Background */}
-        <link href="https://fonts.googleapis.com/css2?family=Aref+Ruqaa:wght@400;700&family=Amiri:ital,wght@0,400;0,700;1,400&family=Reem+Kufi:wght@400;700&family=Tajawal:wght@400;700&family=Scheherazade+New:wght@400;700&family=Lateef:wght@400;700&family=Dancing+Script:wght@400;700&family=Great+Vibes&family=Pacifico&family=Sacramento&display=swap" rel="stylesheet" />
         <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:20px_20px] opacity-30"></div>
         
         {/* Live Scaling Element */}
@@ -283,6 +282,7 @@ export const CustomizerPanel = () => {
           }`}
           style={{ minWidth: '150px', minHeight: '80px', padding: '20px' }}
         >
+          <link href="https://fonts.googleapis.com/css2?family=Aref+Ruqaa:wght@400;700&family=Amiri:ital,wght@0,400;0,700;1,400&family=Reem+Kufi:wght@400;700&family=Tajawal:wght@400;700&family=Scheherazade+New:wght@400;700&family=Lateef:wght@400;700&family=Dancing+Script:wght@400;700&family=Great+Vibes&family=Pacifico&family=Sacramento&display=swap" rel="stylesheet" />
           {store.type === 'AI_GENERATED' ? (
             aiLoading && !aiImageUrl ? (
               <div className="flex flex-col items-center gap-3">
