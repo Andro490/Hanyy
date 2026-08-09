@@ -240,32 +240,21 @@ export const CustomizerPanel = () => {
   };
 
 
-  const generateAiImage = async () => {
+  const generateAiImage = () => {
     if (!store.aiPrompt.trim()) return;
     setAiLoading(true);
     setAiImageUrl(null);
     setAiError(false);
 
-    try {
-      // Call backend - HF token is stored securely in Railway env variables
-      const apiBase = import.meta.env.PROD
-        ? 'https://hanyy-production-166a.up.railway.app/api'
-        : '/api';
-      const response = await fetch(`${apiBase}/ai/generate-image`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: store.aiPrompt, material: store.material }),
-        signal: AbortSignal.timeout(120_000),
-      });
+    const materialLabel = store.material === 'GOLD' ? '18 karat gold' : '925 sterling silver';
+    const fullPrompt = `${store.aiPrompt.trim()}, made of ${materialLabel}, product photography, white background, no people`;
+    const encoded = encodeURIComponent(fullPrompt);
+    const seed = Math.floor(Math.random() * 999999);
 
-      if (!response.ok) throw new Error('Generation failed');
-      const data = await response.json();
-      setAiImageUrl(data.imageUrl);
-    } catch (error) {
-      console.error(error);
-      setAiError(true);
-      setAiLoading(false);
-    }
+    // Direct call - no backend needed, no API key needed
+    const url = `https://image.pollinations.ai/prompt/${encoded}?model=flux&width=512&height=512&nologo=true&seed=${seed}`;
+    setAiImageUrl(url);
+    // img onLoad/onError handlers below manage the loading state
   };
 
   return (
