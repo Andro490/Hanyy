@@ -240,31 +240,23 @@ export const CustomizerPanel = () => {
   };
 
 
-  const generateAiImage = async () => {
+  const generateAiImage = () => {
     if (!store.aiPrompt.trim()) return;
     setAiLoading(true);
     setAiImageUrl(null);
     setAiError(false);
 
-    try {
-      const apiBase = import.meta.env.PROD
-        ? 'https://hanyy-production-166a.up.railway.app/api'
-        : '/api';
-      const response = await fetch(`${apiBase}/ai/generate-image`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: store.aiPrompt, material: store.material }),
-        signal: AbortSignal.timeout(120_000),
-      });
-
-      if (!response.ok) throw new Error('Backend AI failed');
-      const data = await response.json();
-      setAiImageUrl(data.imageUrl);
-    } catch (error) {
-      console.error('[AI]', error);
-      setAiError(true);
-      setAiLoading(false);
-    }
+    const materialLabel = store.material === 'GOLD' ? '18 karat gold' : '925 sterling silver';
+    
+    // We KEEP the user's quotes because FLUX needs them to understand what text to write!
+    const fullPrompt = `Macro product photography of a ${materialLabel} nameplate necklace spelling the text ${store.aiPrompt.trim()}. Flat lay on a clean white background, studio lighting, 8k resolution, highly detailed typography.`;
+    
+    const encoded = encodeURIComponent(fullPrompt);
+    const seed = Math.floor(Math.random() * 999999);
+    
+    // Call Pollinations directly using the FLUX model which is amazing at text
+    const url = `https://image.pollinations.ai/prompt/${encoded}?model=flux&width=1024&height=1024&nologo=true&seed=${seed}`;
+    setAiImageUrl(url);
   };
 
   return (
