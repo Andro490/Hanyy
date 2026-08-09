@@ -3,7 +3,6 @@ import { motion } from 'framer-motion';
 import { Settings, Sparkles, Box, Type, ShoppingCart, Check } from 'lucide-react';
 import { useCustomizerStore } from '../../store/customizerStore';
 import { usePricingEngine } from '../../hooks/usePricingEngine';
-import api from '../../services/api';
 import * as domtoimage from 'dom-to-image-more';
 
 // Hand-drawn SVG Template Wrappers
