@@ -95,7 +95,7 @@ const HeartTemplate = ({ text, material, textColor, fontFamily, autoFit, textCur
             <path id="arcUp"   d="M -500,350 Q 130,-120 760,350" fill="none" />
           </defs>
           <text
-            fontFamily={fontFamily}
+            fontFamily={fontFamily.replace(/['"]/g, '').split(',')[0]}
             fontSize={svgFontSize * fontSizeScale}
             fill={textColor}
             textAnchor="middle"
@@ -189,6 +189,7 @@ export const CustomizerPanel = () => {
     let previewBase64: string | null = null;
     if (previewRef.current) {
       try {
+        await document.fonts.ready; // Ensure all fonts are fully loaded
         previewBase64 = await htmlToImage.toPng(previewRef.current, {
           backgroundColor: '#0f172a',
           pixelRatio: 2,
