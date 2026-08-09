@@ -66,7 +66,7 @@ export const saveDesign = async (req: Request, res: Response, next: NextFunction
     res.status(201).json({ status: 'success', data: design });
   } catch (error: any) {
     if (error instanceof z.ZodError) {
-      res.status(400).json({ status: 'error', message: error.errors });
+      res.status(400).json({ status: 'error', message: (error as any).errors });
       return;
     }
     next(error);
@@ -93,7 +93,7 @@ export const aiGenerate = async (req: Request, res: Response, next: NextFunction
     res.status(200).json({ status: 'success', data: mockResult });
   } catch (error: any) {
     if (error instanceof z.ZodError) {
-      res.status(400).json({ status: 'error', message: error.errors });
+      res.status(400).json({ status: 'error', message: (error as any).errors });
       return;
     }
     next(error);

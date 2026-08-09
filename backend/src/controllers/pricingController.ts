@@ -30,7 +30,7 @@ export const calculatePrice = async (req: Request, res: Response, next: NextFunc
         });
     } catch (error: any) {
         if (error instanceof z.ZodError) {
-            res.status(400).json({ status: 'error', message: error.errors });
+            res.status(400).json({ status: 'error', message: (error as any).errors });
             return;
         }
         next(error);

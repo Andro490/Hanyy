@@ -20,7 +20,7 @@ const loginSchema = z.object({
 // Helper to generate JWT and set HttpOnly cookie
 const signTokenAndSetCookie = (res: Response, userId: string, role: string) => {
   const token = jwt.sign({ id: userId, role }, ENV.JWT_SECRET, {
-    expiresIn: ENV.JWT_EXPIRES_IN,
+    expiresIn: ENV.JWT_EXPIRES_IN as string,
   });
 
   res.cookie('token', token, {
@@ -62,7 +62,7 @@ export const register = async (req: Request, res: Response, next: NextFunction):
     });
   } catch (error: any) {
     if (error instanceof z.ZodError) {
-      res.status(400).json({ status: 'error', message: error.errors });
+      res.status(400).json({ status: 'error', message: (error as any).errors });
       return;
     }
     next(error);
@@ -94,7 +94,7 @@ export const login = async (req: Request, res: Response, next: NextFunction): Pr
     });
   } catch (error: any) {
     if (error instanceof z.ZodError) {
-      res.status(400).json({ status: 'error', message: error.errors });
+      res.status(400).json({ status: 'error', message: (error as any).errors });
       return;
     }
     next(error);
