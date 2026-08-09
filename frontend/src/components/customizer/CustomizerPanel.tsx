@@ -257,13 +257,14 @@ export const CustomizerPanel = () => {
     <div className="w-full max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 p-6 bg-slate-900 rounded-3xl text-white shadow-2xl border border-slate-800">
       
       {/* 3D / Live Preview Area */}
-      <div ref={previewRef} className="flex flex-col items-center justify-center bg-slate-950 rounded-2xl p-6 relative overflow-hidden">
+      <div className="flex flex-col items-center justify-center bg-slate-950 rounded-2xl p-6 relative overflow-hidden">
         {/* Animated Grid Background */}
         <link href="https://fonts.googleapis.com/css2?family=Aref+Ruqaa:wght@400;700&family=Amiri:ital,wght@0,400;0,700;1,400&family=Reem+Kufi:wght@400;700&family=Tajawal:wght@400;700&family=Scheherazade+New:wght@400;700&family=Lateef:wght@400;700&family=Dancing+Script:wght@400;700&family=Great+Vibes&family=Pacifico&family=Sacramento&display=swap" rel="stylesheet" />
         <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:20px_20px] opacity-30"></div>
         
         {/* Live Scaling Element */}
         <motion.div
+          ref={previewRef}
           animate={{
             width: store.type === 'PRE_DESIGNED' ? 'auto' : store.width * 10,
             height: store.type === 'PRE_DESIGNED' ? 'auto' : store.height * 10,
