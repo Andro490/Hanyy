@@ -1,9 +1,9 @@
-import React from 'react';
+import React, { useId } from 'react';
 import { motion } from 'framer-motion';
 import { Settings, Sparkles, Box, Type, ShoppingCart, Check } from 'lucide-react';
 import { useCustomizerStore } from '../../store/customizerStore';
 import { usePricingEngine } from '../../hooks/usePricingEngine';
-import html2canvas from 'html2canvas';
+import * as htmlToImage from 'html-to-image';
 
 // Hand-drawn SVG Template Wrappers
 const CrownTemplate = ({ text, material, textColor, fontFamily }: { text: string; material: string; textColor: string; fontFamily: string }) => (
@@ -22,6 +22,7 @@ const HeartTemplate = ({ text, material, textColor, fontFamily, autoFit, textCur
   const spanRef = React.useRef<HTMLSpanElement>(null);
   const containerRef = React.useRef<HTMLDivElement>(null);
   const [scale, setScale] = React.useState(1);
+  const uniqueId = useId().replace(/:/g, ''); // Generate safe unique ID for SVG paths
 
   const fontScaleMap: Record<string, { m: number; useWidthOnly?: boolean }> = {
     "'Sacramento', cursive":        { m: 1.15, useWidthOnly: true  }, // Slightly reduced to touch inner edges perfectly
@@ -91,8 +92,8 @@ const HeartTemplate = ({ text, material, textColor, fontFamily, autoFit, textCur
               Down (Smile): dips to y=132 at center.
               Up (Frown): rises to y=125 at center (raised slightly per request).
             */}
-            <path id="arcDown" d="M -500,-258 Q 130,500 760,-258" fill="none" />
-            <path id="arcUp"   d="M -500,350 Q 130,-120 760,350" fill="none" />
+            <path id={`arcDown-${uniqueId}`} d="M -500,-258 Q 130,500 760,-258" fill="none" />
+            <path id={`arcUp-${uniqueId}`}   d="M -500,350 Q 130,-120 760,350" fill="none" />
           </defs>
           <text
             fontFamily={fontFamily.replace(/['"]/g, '').split(',')[0]}
@@ -107,7 +108,7 @@ const HeartTemplate = ({ text, material, textColor, fontFamily, autoFit, textCur
             }}
           >
             <textPath
-              href={textCurve === 'up' ? '#arcUp' : '#arcDown'}
+              href={textCurve === 'up' ? `#arcUp-${uniqueId}` : `#arcDown-${uniqueId}`}
               startOffset="50%"
             >
               {displayText}
@@ -190,16 +191,17 @@ export const CustomizerPanel = () => {
     if (previewRef.current) {
       try {
         await document.fonts.ready;
-        const canvas = await html2canvas(previewRef.current, {
-          backgroundColor: null,
-          scale: 2,
-          useCORS: true,
-          allowTaint: true,
-          logging: false
+        // Small delay to ensure any CSS transitions (like curve) are settled
+        await new Promise(resolve => setTimeout(resolve, 300));
+        
+        previewBase64 = await htmlToImage.toPng(previewRef.current, {
+          backgroundColor: '#0f172a',
+          pixelRatio: 2,
+          skipFonts: false, // Force font embedding
+          cacheBust: true, // Bypass cache issues with fonts
         });
-        previewBase64 = canvas.toDataURL('image/png');
-      } catch {
-        // Screenshot failed silently
+      } catch (err) {
+        console.error('Screenshot failed:', err);
       }
     }
 
