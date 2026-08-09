@@ -48,7 +48,7 @@ model GalleryItem {
   title       String
   description String?
   imageUrl    String
-  price       Float?
+  price       String?
   createdAt   DateTime @default(now())
 }
 

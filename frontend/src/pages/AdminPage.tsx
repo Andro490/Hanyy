@@ -129,8 +129,8 @@ export const AdminPage = () => {
               <input type="url" required value={newItem.imageUrl} onChange={e => setNewItem({ ...newItem, imageUrl: e.target.value })} className="input-dark w-full" placeholder="https://..." />
             </div>
             <div>
-              <label className="block text-sm text-white/60 mb-1">Estimated Price ($)</label>
-              <input type="number" value={newItem.price} onChange={e => setNewItem({ ...newItem, price: e.target.value })} className="input-dark w-full" />
+              <label className="block text-sm text-white/60 mb-1">Price / Range (e.g. "1200 EGP" or "800-1500 EGP")</label>
+              <input type="text" value={newItem.price} onChange={e => setNewItem({ ...newItem, price: e.target.value })} className="input-dark w-full" placeholder="e.g. 1200 EGP or 800-1500 EGP" />
             </div>
             <button type="submit" disabled={isLoading} className="btn-primary w-full py-3">Add Item</button>
           </form>
@@ -149,7 +149,11 @@ export const AdminPage = () => {
               <img src={item.imageUrl} alt={item.title} className="w-full h-48 object-cover" />
               <div className="p-3">
                 <h3 className="font-bold">{item.title}</h3>
-                {item.price && <p className="text-brand-gold text-sm">${item.price}</p>}
+                {item.price && (
+                  <span className="inline-block mt-1 text-xs font-semibold text-brand-gold bg-brand-gold/10 border border-brand-gold/20 rounded-full px-3 py-1">
+                    {item.price}
+                  </span>
+                )}
               </div>
               <button 
                 onClick={() => handleDeleteItem(item.id)}

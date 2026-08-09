@@ -14,9 +14,10 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // Only redirect if we are strictly in a protected area to avoid infinite loops
-      const publicPaths = ['/login', '/register', '/'];
-      if (!publicPaths.includes(window.location.pathname)) {
+      // Only redirect if we are NOT on a public page
+      const publicPaths = ['/login', '/register', '/', '/gallery', '/customizer'];
+      const isPublic = publicPaths.some(p => window.location.pathname.startsWith(p));
+      if (!isPublic) {
         window.location.href = '/login';
       }
     }

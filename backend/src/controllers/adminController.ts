@@ -43,7 +43,7 @@ export const createGalleryItem = async (req: Request, res: Response, next: NextF
   try {
     const { title, description, imageUrl, price } = req.body;
     const item = await prisma.galleryItem.create({
-      data: { title, description, imageUrl, price: price ? parseFloat(price) : null }
+      data: { title, description, imageUrl, price: price ? String(price) : null }
     });
     res.status(201).json({ status: 'success', data: item });
   } catch (error) {

@@ -6,6 +6,7 @@ import { HomePage } from './pages/HomePage';
 import { CustomizerPage } from './pages/CustomizerPage';
 import { LoginPage, RegisterPage } from './pages/AuthPages';
 import { AdminPage } from './pages/AdminPage';
+import { GalleryPage } from './pages/GalleryPage';
 import { useAuthStore } from './store/authStore';
 
 function App() {
@@ -22,6 +23,7 @@ function App() {
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/customizer" element={<CustomizerPage />} />
+          <Route path="/gallery" element={<GalleryPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/admin" element={<AdminPage />} />
