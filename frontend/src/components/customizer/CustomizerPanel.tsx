@@ -240,44 +240,18 @@ export const CustomizerPanel = () => {
   };
 
 
-  const generateAiImage = async () => {
+  const generateAiImage = () => {
     if (!store.aiPrompt.trim()) return;
     setAiLoading(true);
     setAiImageUrl(null);
     setAiError(false);
 
     const materialLabel = store.material === 'GOLD' ? '18 karat gold' : '925 sterling silver';
-    const fullPrompt = `${store.aiPrompt.trim()}, made of ${materialLabel}, photorealistic jewelry product shot, white background, no people, studio lighting`;
-
-    try {
-      const hfToken = import.meta.env.VITE_HF_TOKEN;
-      const response = await fetch(
-        'https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-xl-base-1.0',
-        {
-          method: 'POST',
-          headers: {
-            ...(hfToken ? { Authorization: `Bearer ${hfToken}` } : {}),
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ inputs: fullPrompt }),
-        }
-      );
-
-      if (!response.ok) {
-        const errText = await response.text();
-        console.error('[HF Error]', response.status, errText.slice(0, 200));
-        throw new Error('HF generation failed');
-      }
-
-      const blob = await response.blob();
-      setAiImageUrl(URL.createObjectURL(blob));
-    } catch (err) {
-      console.error(err);
-      // Fallback to Pollinations if HF fails
-      const encoded = encodeURIComponent(fullPrompt);
-      const seed = Math.floor(Math.random() * 999999);
-      setAiImageUrl(`https://image.pollinations.ai/prompt/${encoded}?model=flux&width=512&height=512&nologo=true&seed=${seed}`);
-    }
+    // "flat lay" = overhead product shot, naturally has NO people
+    const fullPrompt = `flat lay overhead view, ${store.aiPrompt.trim()}, made of ${materialLabel}, on white marble surface, professional product photography, 8k macro`;
+    const encoded = encodeURIComponent(fullPrompt);
+    const seed = Math.floor(Math.random() * 999999);
+    setAiImageUrl(`https://image.pollinations.ai/prompt/${encoded}?model=flux&width=512&height=512&nologo=true&seed=${seed}`);
   };
 
   return (
