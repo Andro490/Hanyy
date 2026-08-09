@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { Settings, Sparkles, Box, Type, ShoppingCart, Check } from 'lucide-react';
 import { useCustomizerStore } from '../../store/customizerStore';
 import { usePricingEngine } from '../../hooks/usePricingEngine';
-import * as htmlToImage from 'html-to-image';
+import domtoimage from 'dom-to-image-more';
 
 // Hand-drawn SVG Template Wrappers
 const CrownTemplate = ({ text, material, textColor, fontFamily }: { text: string; material: string; textColor: string; fontFamily: string }) => (
@@ -82,7 +82,12 @@ const HeartTemplate = ({ text, material, textColor, fontFamily, autoFit, textCur
 
       {/* Curved text via SVG textPath */}
       {textCurve !== 'none' ? (
-        <svg viewBox="0 0 260 220" className="absolute inset-0 w-full h-full z-10">
+        <svg 
+          xmlns="http://www.w3.org/2000/svg" 
+          xmlnsXlink="http://www.w3.org/1999/xlink" 
+          viewBox="0 0 260 220" 
+          className="absolute inset-0 w-full h-full z-10"
+        >
           <defs>
             {/*
               Ultra-extended paths to ensure massive auto-fitted text NEVER gets cut off.
@@ -194,11 +199,9 @@ export const CustomizerPanel = () => {
         // Small delay to ensure any CSS transitions (like curve) are settled
         await new Promise(resolve => setTimeout(resolve, 300));
         
-        previewBase64 = await htmlToImage.toPng(previewRef.current, {
-          backgroundColor: '#0f172a',
-          pixelRatio: 2,
-          skipFonts: false, // Force font embedding
-          cacheBust: true, // Bypass cache issues with fonts
+        previewBase64 = await domtoimage.toPng(previewRef.current, {
+          bgcolor: '#0f172a',
+          scale: 2
         });
       } catch (err) {
         console.error('Screenshot failed:', err);
