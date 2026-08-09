@@ -1,7 +1,39 @@
 import { Request, Response } from 'express';
 import https from 'https';
 
-export const generateAiImage = (req: Request, res: Response): void => {
+// Helper: make a POST request to HF Inference API and return raw buffer + content-type
+function callHF(token: string, model: string, body: string): Promise<{ buffer: Buffer; contentType: string }> {
+  return new Promise((resolve, reject) => {
+    const options = {
+      hostname: 'api-inference.huggingface.co',
+      path: `/models/${model}`,
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+        'Content-Length': Buffer.byteLength(body),
+      },
+      timeout: 90_000,
+    };
+
+    const req = https.request(options, (res) => {
+      const chunks: Buffer[] = [];
+      res.on('data', (chunk: Buffer) => chunks.push(chunk));
+      res.on('end', () => {
+        const contentType = res.headers['content-type'] || '';
+        const buffer = Buffer.concat(chunks);
+        resolve({ buffer, contentType });
+      });
+    });
+
+    req.on('timeout', () => { req.destroy(); reject(new Error('HF timeout')); });
+    req.on('error', reject);
+    req.write(body);
+    req.end();
+  });
+}
+
+export const generateAiImage = async (req: Request, res: Response): Promise<void> => {
   const { prompt, material } = req.body as { prompt: string; material: string };
 
   if (!prompt || prompt.trim().length === 0) {
@@ -11,7 +43,7 @@ export const generateAiImage = (req: Request, res: Response): void => {
 
   const hfToken = process.env.HF_TOKEN;
   if (!hfToken) {
-    res.status(500).json({ error: 'Missing HF_TOKEN environment variable on server' });
+    res.status(500).json({ error: 'HF_TOKEN not set on server' });
     return;
   }
 
@@ -19,47 +51,41 @@ export const generateAiImage = (req: Request, res: Response): void => {
   const fullPrompt = `${prompt.trim()}, made of ${materialLabel}, photorealistic jewelry product shot, white background, no people`;
   const body = JSON.stringify({ inputs: fullPrompt });
 
-  const options = {
-    hostname: 'api-inference.huggingface.co',
-    path: '/models/stabilityai/stable-diffusion-xl-base-1.0',
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${hfToken}`,
-      'Content-Type': 'application/json',
-      'Content-Length': Buffer.byteLength(body),
-    },
-    timeout: 90_000,
-  };
+  // Retry up to 3 times (handles "model loading" 503 responses)
+  const model = 'stabilityai/stable-diffusion-xl-base-1.0';
+  const maxRetries = 3;
 
-  const request = https.request(options, (hfRes) => {
-    const chunks: Buffer[] = [];
-    hfRes.on('data', (chunk: Buffer) => chunks.push(chunk));
-    hfRes.on('end', () => {
-      const contentType = hfRes.headers['content-type'] || '';
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      const { buffer, contentType } = await callHF(hfToken, model, body);
 
-      if (!contentType.startsWith('image/')) {
-        const errorText = Buffer.concat(chunks).toString('utf-8');
-        console.error('[HF AI Error]', hfRes.statusCode, errorText.slice(0, 300));
-        res.status(500).json({ error: 'سيرفر الذكاء الاصطناعي مشغول حالياً، يرجى المحاولة بعد قليل.' });
+      if (contentType.startsWith('image/')) {
+        const base64 = buffer.toString('base64');
+        res.status(200).json({ imageUrl: `data:${contentType};base64,${base64}` });
         return;
       }
 
-      const buffer = Buffer.concat(chunks);
-      const base64 = buffer.toString('base64');
-      res.status(200).json({ imageUrl: `data:${contentType};base64,${base64}` });
-    });
-  });
+      // HF returned JSON (model loading or error)
+      const text = buffer.toString('utf-8');
+      console.log(`[HF attempt ${attempt}] Non-image response:`, text.slice(0, 200));
 
-  request.on('timeout', () => {
-    request.destroy();
-    res.status(504).json({ error: 'Image generation timed out. Please try again.' });
-  });
+      // If model is loading, wait and retry
+      if (text.includes('loading') || text.includes('estimated_time')) {
+        if (attempt < maxRetries) {
+          await new Promise(r => setTimeout(r, 8000)); // wait 8 seconds
+          continue;
+        }
+      }
 
-  request.on('error', (err: Error) => {
-    console.error('[AI Image Error]', err.message);
-    res.status(500).json({ error: 'Failed to generate image. Please try again.' });
-  });
+      // Non-recoverable error
+      res.status(500).json({ error: 'سيرفر الذكاء الاصطناعي مشغول حالياً، يرجى المحاولة بعد قليل.' });
+      return;
 
-  request.write(body);
-  request.end();
+    } catch (err: any) {
+      console.error(`[HF attempt ${attempt}] Error:`, err.message);
+      if (attempt === maxRetries) {
+        res.status(500).json({ error: 'Failed to generate image. Please try again.' });
+      }
+    }
+  }
 };
