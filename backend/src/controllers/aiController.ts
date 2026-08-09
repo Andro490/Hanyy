@@ -9,31 +9,41 @@ export const generateAiImage = (req: Request, res: Response): void => {
     return;
   }
 
+  const hfToken = process.env.HF_TOKEN;
+  if (!hfToken) {
+    res.status(500).json({ error: 'Missing HF_TOKEN environment variable on server' });
+    return;
+  }
+
   const materialLabel = material === 'GOLD' ? '18 karat gold' : '925 sterling silver';
   const fullPrompt = `${prompt.trim()}, made of ${materialLabel}, photorealistic jewelry product shot, white background, no people`;
-  const encoded = encodeURIComponent(fullPrompt);
-  const seed = Date.now();
-  const reqPath = `/prompt/${encoded}?model=flux&width=512&height=512&nologo=true&seed=${seed}`;
+  const body = JSON.stringify({ inputs: fullPrompt });
 
   const options = {
-    hostname: 'image.pollinations.ai',
-    path: reqPath,
-    method: 'GET',
-    headers: { 'User-Agent': 'HanyJewelry/1.0' },
+    hostname: 'api-inference.huggingface.co',
+    path: '/models/black-forest-labs/FLUX.1-schnell',
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${hfToken}`,
+      'Content-Type': 'application/json',
+      'Content-Length': Buffer.byteLength(body),
+    },
     timeout: 90_000,
   };
 
-  const request = https.request(options, (imgRes) => {
+  const request = https.request(options, (hfRes) => {
     const chunks: Buffer[] = [];
-    imgRes.on('data', (chunk: Buffer) => chunks.push(chunk));
-    imgRes.on('end', () => {
-      const contentType = imgRes.headers['content-type'] || '';
+    hfRes.on('data', (chunk: Buffer) => chunks.push(chunk));
+    hfRes.on('end', () => {
+      const contentType = hfRes.headers['content-type'] || '';
+
       if (!contentType.startsWith('image/')) {
         const errorText = Buffer.concat(chunks).toString('utf-8');
-        console.error('[Pollinations Error]', errorText.slice(0, 200));
+        console.error('[HF AI Error]', hfRes.statusCode, errorText.slice(0, 300));
         res.status(500).json({ error: 'سيرفر الذكاء الاصطناعي مشغول حالياً، يرجى المحاولة بعد قليل.' });
         return;
       }
+
       const buffer = Buffer.concat(chunks);
       const base64 = buffer.toString('base64');
       res.status(200).json({ imageUrl: `data:${contentType};base64,${base64}` });
@@ -50,5 +60,6 @@ export const generateAiImage = (req: Request, res: Response): void => {
     res.status(500).json({ error: 'Failed to generate image. Please try again.' });
   });
 
+  request.write(body);
   request.end();
 };
