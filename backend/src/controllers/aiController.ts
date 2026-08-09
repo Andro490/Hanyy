@@ -1,12 +1,6 @@
 import { Request, Response } from 'express';
-import https from 'https';
 
-/**
- * POST /api/ai/generate-image
- * Proxies image generation to Pollinations.ai with a 90-second timeout.
- * Returns the image as a base64 data URL so the browser never hits CORS issues.
- */
-export const generateAiImage = (req: Request, res: Response): void => {
+export const generateAiImage = async (req: Request, res: Response): Promise<void> => {
   const { prompt, material } = req.body as { prompt: string; material: string };
 
   if (!prompt || prompt.trim().length === 0) {
@@ -14,52 +8,43 @@ export const generateAiImage = (req: Request, res: Response): void => {
     return;
   }
 
-  const materialLabel = material === 'GOLD' ? '18k gold' : '925 silver';
-  const fullPrompt = `luxury jewelry design, ${prompt.trim()}, ${materialLabel}, high detail, white background, professional product photo, photorealistic`;
-  const encoded = encodeURIComponent(fullPrompt);
-  const pollinationsUrl = `https://image.pollinations.ai/prompt/${encoded}?model=flux&width=512&height=512&nologo=true&seed=${Date.now()}`;
+  const materialLabel = material === 'GOLD' ? '18 karat gold' : '925 sterling silver';
+  const fullPrompt = `${prompt.trim()}, made of ${materialLabel}, high quality photorealistic jewelry product shot`;
 
-  const parsedUrl = new URL(pollinationsUrl);
+  try {
+    const hfToken = process.env.HF_TOKEN;
+    if (!hfToken) {
+       res.status(500).json({ error: 'Missing Hugging Face Token in backend' });
+       return;
+    }
 
-  const options = {
-    hostname: parsedUrl.hostname,
-    path: parsedUrl.pathname + parsedUrl.search,
-    method: 'GET',
-    headers: { 'User-Agent': 'HanyJewelry/1.0' },
-    timeout: 90_000,
-  };
-
-  const request = https.request(options, (imageRes) => {
-    const chunks: Buffer[] = [];
-
-    imageRes.on('data', (chunk: Buffer) => chunks.push(chunk));
-
-    imageRes.on('end', () => {
-      const contentType = imageRes.headers['content-type'] || '';
-      
-      // If the API returns HTML (rate limit or error page) instead of an image, fail gracefully
-      if (!contentType.startsWith('image/')) {
-        res.status(500).json({ error: 'سيرفر الذكاء الاصطناعي مشغول حالياً، يرجى المحاولة بعد قليل.' });
-        return;
+    const response = await fetch(
+      "https://api-inference.huggingface.co/models/black-forest-labs/FLUX.1-schnell",
+      {
+        headers: {
+          Authorization: `Bearer ${hfToken}`,
+          "Content-Type": "application/json",
+        },
+        method: "POST",
+        body: JSON.stringify({ inputs: fullPrompt }),
       }
+    );
 
-      const buffer = Buffer.concat(chunks);
-      const base64 = buffer.toString('base64');
-      const dataUrl = `data:${contentType};base64,${base64}`;
-      res.status(200).json({ imageUrl: dataUrl });
-    });
-  });
+    if (!response.ok) {
+      const text = await response.text();
+      console.error('[AI Error]', text);
+      res.status(500).json({ error: 'سيرفر الذكاء الاصطناعي مشغول حالياً، يرجى المحاولة بعد قليل.' });
+      return;
+    }
 
-  request.on('timeout', () => {
-    request.destroy();
-    res.status(504).json({ error: 'Image generation timed out. Please try again.' });
-  });
-
-  request.on('error', (err: Error) => {
-    console.error('[AI Image Error]', err.message);
+    const arrayBuffer = await response.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+    const base64 = buffer.toString('base64');
+    const dataUrl = `data:image/jpeg;base64,${base64}`;
+    
+    res.status(200).json({ imageUrl: dataUrl });
+  } catch (error: any) {
+    console.error('[AI Image Error]', error.message);
     res.status(500).json({ error: 'Failed to generate image. Please try again.' });
-  });
-
-  request.end();
+  }
 };
-

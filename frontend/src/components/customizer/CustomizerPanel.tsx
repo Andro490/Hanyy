@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Settings, Sparkles, Box, Type, ShoppingCart, Check } from 'lucide-react';
 import { useCustomizerStore } from '../../store/customizerStore';
 import { usePricingEngine } from '../../hooks/usePricingEngine';
+import api from '../../services/api';
 import * as domtoimage from 'dom-to-image-more';
 
 // Hand-drawn SVG Template Wrappers
@@ -246,27 +247,13 @@ export const CustomizerPanel = () => {
     setAiImageUrl(null);
     setAiError(false);
 
-    const materialLabel = store.material === 'GOLD' ? '18 karat gold' : '925 sterling silver';
-    const fullPrompt = `${store.aiPrompt.trim()}, made of ${materialLabel}, high quality photorealistic jewelry product shot`;
-
     try {
-      const response = await fetch(
-        "https://api-inference.huggingface.co/models/black-forest-labs/FLUX.1-schnell",
-        {
-          headers: {
-            Authorization: `Bearer ${import.meta.env.VITE_HF_TOKEN}`,
-            "Content-Type": "application/json",
-          },
-          method: "POST",
-          body: JSON.stringify({ inputs: fullPrompt }),
-        }
-      );
+      const response = await api.post('/ai/generate-image', {
+        prompt: store.aiPrompt,
+        material: store.material,
+      }, { timeout: 120_000 }); // Increase timeout for AI generation
 
-      if (!response.ok) throw new Error("Generation failed");
-
-      const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
-      setAiImageUrl(url);
+      setAiImageUrl(response.data.imageUrl);
     } catch (error) {
       console.error(error);
       setAiError(true);
