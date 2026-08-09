@@ -1,35 +1,51 @@
 import { Request, Response } from 'express';
 import https from 'https';
+import http from 'http';
+import { URL } from 'url';
 
-// Helper: make a POST request to HF Inference API and return raw buffer + content-type
-function callHF(token: string, model: string, body: string): Promise<{ buffer: Buffer; contentType: string }> {
+// Follow redirects automatically (https module doesn't do this by default)
+function fetchWithRedirects(urlStr: string, maxRedirects = 5): Promise<{ buffer: Buffer; contentType: string }> {
   return new Promise((resolve, reject) => {
-    const options = {
-      hostname: 'api-inference.huggingface.co',
-      path: `/models/${model}`,
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
-        'Content-Length': Buffer.byteLength(body),
-      },
-      timeout: 90_000,
+    const doRequest = (currentUrl: string, redirectsLeft: number) => {
+      const parsed = new URL(currentUrl);
+      const lib = parsed.protocol === 'https:' ? https : http;
+
+      const options = {
+        hostname: parsed.hostname,
+        path: parsed.pathname + parsed.search,
+        method: 'GET',
+        headers: { 'User-Agent': 'HanyJewelry/1.0' },
+        timeout: 90_000,
+      };
+
+      const req = lib.request(options, (res) => {
+        // Follow redirect
+        if ([301, 302, 303, 307, 308].includes(res.statusCode ?? 0) && res.headers.location) {
+          if (redirectsLeft === 0) {
+            reject(new Error('Too many redirects'));
+            return;
+          }
+          const nextUrl = res.headers.location.startsWith('http')
+            ? res.headers.location
+            : `${parsed.protocol}//${parsed.hostname}${res.headers.location}`;
+          doRequest(nextUrl, redirectsLeft - 1);
+          return;
+        }
+
+        const chunks: Buffer[] = [];
+        res.on('data', (chunk: Buffer) => chunks.push(chunk));
+        res.on('end', () => {
+          const contentType = res.headers['content-type'] || '';
+          resolve({ buffer: Buffer.concat(chunks), contentType });
+        });
+      });
+
+      req.on('timeout', () => { req.destroy(); reject(new Error('Request timeout')); });
+      req.on('error', reject);
+      req.end();
     };
 
-    const req = https.request(options, (res) => {
-      const chunks: Buffer[] = [];
-      res.on('data', (chunk: Buffer) => chunks.push(chunk));
-      res.on('end', () => {
-        const contentType = res.headers['content-type'] || '';
-        const buffer = Buffer.concat(chunks);
-        resolve({ buffer, contentType });
-      });
-    });
-
-    req.on('timeout', () => { req.destroy(); reject(new Error('HF timeout')); });
-    req.on('error', reject);
-    req.write(body);
-    req.end();
+    doRequest(urlStr, maxRedirects);
   });
 }
 
@@ -41,51 +57,25 @@ export const generateAiImage = async (req: Request, res: Response): Promise<void
     return;
   }
 
-  const hfToken = process.env.HF_TOKEN;
-  if (!hfToken) {
-    res.status(500).json({ error: 'HF_TOKEN not set on server' });
-    return;
-  }
-
   const materialLabel = material === 'GOLD' ? '18 karat gold' : '925 sterling silver';
-  const fullPrompt = `${prompt.trim()}, made of ${materialLabel}, photorealistic jewelry product shot, white background, no people`;
-  const body = JSON.stringify({ inputs: fullPrompt });
+  const fullPrompt = `flat lay overhead, ${prompt.trim()}, made of ${materialLabel}, white marble surface, professional product photography, no people`;
+  const encoded = encodeURIComponent(fullPrompt);
+  const seed = Date.now();
+  const url = `https://image.pollinations.ai/prompt/${encoded}?model=flux&width=512&height=512&nologo=true&seed=${seed}`;
 
-  // Retry up to 3 times (handles "model loading" 503 responses)
-  const model = 'stabilityai/stable-diffusion-xl-base-1.0';
-  const maxRetries = 3;
+  try {
+    const { buffer, contentType } = await fetchWithRedirects(url);
 
-  for (let attempt = 1; attempt <= maxRetries; attempt++) {
-    try {
-      const { buffer, contentType } = await callHF(hfToken, model, body);
-
-      if (contentType.startsWith('image/')) {
-        const base64 = buffer.toString('base64');
-        res.status(200).json({ imageUrl: `data:${contentType};base64,${base64}` });
-        return;
-      }
-
-      // HF returned JSON (model loading or error)
-      const text = buffer.toString('utf-8');
-      console.log(`[HF attempt ${attempt}] Non-image response:`, text.slice(0, 200));
-
-      // If model is loading, wait and retry
-      if (text.includes('loading') || text.includes('estimated_time')) {
-        if (attempt < maxRetries) {
-          await new Promise(r => setTimeout(r, 8000)); // wait 8 seconds
-          continue;
-        }
-      }
-
-      // Non-recoverable error
+    if (!contentType.startsWith('image/')) {
+      console.error('[Pollinations non-image]', contentType, buffer.toString('utf-8').slice(0, 200));
       res.status(500).json({ error: 'سيرفر الذكاء الاصطناعي مشغول حالياً، يرجى المحاولة بعد قليل.' });
       return;
-
-    } catch (err: any) {
-      console.error(`[HF attempt ${attempt}] Error:`, err.message);
-      if (attempt === maxRetries) {
-        res.status(500).json({ error: 'Failed to generate image. Please try again.' });
-      }
     }
+
+    const base64 = buffer.toString('base64');
+    res.status(200).json({ imageUrl: `data:${contentType};base64,${base64}` });
+  } catch (err: any) {
+    console.error('[AI Image Error]', err.message);
+    res.status(500).json({ error: 'Failed to generate image. Please try again.' });
   }
 };
