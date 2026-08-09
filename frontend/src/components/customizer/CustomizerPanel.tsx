@@ -3,7 +3,6 @@ import { motion } from 'framer-motion';
 import { Settings, Sparkles, Box, Type, ShoppingCart, Check } from 'lucide-react';
 import { useCustomizerStore } from '../../store/customizerStore';
 import { usePricingEngine } from '../../hooks/usePricingEngine';
-import { useNavigate } from 'react-router-dom';
 
 // Hand-drawn SVG Template Wrappers
 const CrownTemplate = ({ text, material, textColor, fontFamily }: { text: string; material: string; textColor: string; fontFamily: string }) => (
@@ -157,7 +156,6 @@ const renderTemplate = (style: string, text: string, material: string, textColor
 };
 
 export const CustomizerPanel = () => {
-  const navigate = useNavigate();
   const store = useCustomizerStore();
   const { isLoading, error } = usePricingEngine();
   const [aiImageUrl, setAiImageUrl] = React.useState<string | null>(null);
