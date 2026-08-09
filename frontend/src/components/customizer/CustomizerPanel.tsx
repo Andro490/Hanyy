@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Settings, Sparkles, Box, Type, ShoppingCart, Check } from 'lucide-react';
 import { useCustomizerStore } from '../../store/customizerStore';
 import { usePricingEngine } from '../../hooks/usePricingEngine';
+import html2canvas from 'html2canvas';
 
 // Hand-drawn SVG Template Wrappers
 const CrownTemplate = ({ text, material, textColor, fontFamily }: { text: string; material: string; textColor: string; fontFamily: string }) => (
@@ -162,6 +163,7 @@ export const CustomizerPanel = () => {
   const [aiLoading, setAiLoading] = React.useState(false);
   const [aiError, setAiError] = React.useState(false);
   const [addedToCart, setAddedToCart] = React.useState(false);
+  const previewRef = React.useRef<HTMLDivElement>(null);
 
   const handleAddToCart = async () => {
     // Save design to localStorage cart
@@ -183,6 +185,22 @@ export const CustomizerPanel = () => {
     cart.push(item);
     localStorage.setItem('hany_cart', JSON.stringify(cart));
 
+    // Capture preview screenshot
+    let previewBase64: string | null = null;
+    if (previewRef.current) {
+      try {
+        const canvas = await html2canvas(previewRef.current, {
+          backgroundColor: '#0f172a',
+          scale: 2,
+          useCORS: true,
+          logging: false,
+        });
+        previewBase64 = canvas.toDataURL('image/png');
+      } catch {
+        // Screenshot failed silently
+      }
+    }
+
     // Send Telegram notification
     try {
       const baseUrl = import.meta.env.PROD ? 'https://hanyy-production-166a.up.railway.app' : '';
@@ -199,6 +217,7 @@ export const CustomizerPanel = () => {
           price: store.price,
           aiPrompt: store.aiPrompt,
           fontFamily: store.fontFamily,
+          previewBase64,
         }),
       });
     } catch {
@@ -238,7 +257,7 @@ export const CustomizerPanel = () => {
     <div className="w-full max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 p-6 bg-slate-900 rounded-3xl text-white shadow-2xl border border-slate-800">
       
       {/* 3D / Live Preview Area */}
-      <div className="flex flex-col items-center justify-center bg-slate-950 rounded-2xl p-6 relative overflow-hidden">
+      <div ref={previewRef} className="flex flex-col items-center justify-center bg-slate-950 rounded-2xl p-6 relative overflow-hidden">
         {/* Animated Grid Background */}
         <link href="https://fonts.googleapis.com/css2?family=Aref+Ruqaa:wght@400;700&family=Amiri:ital,wght@0,400;0,700;1,400&family=Reem+Kufi:wght@400;700&family=Tajawal:wght@400;700&family=Scheherazade+New:wght@400;700&family=Lateef:wght@400;700&family=Dancing+Script:wght@400;700&family=Great+Vibes&family=Pacifico&family=Sacramento&display=swap" rel="stylesheet" />
         <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:20px_20px] opacity-30"></div>

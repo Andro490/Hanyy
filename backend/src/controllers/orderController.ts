@@ -1,11 +1,11 @@
 import { Request, Response } from 'express';
-import { sendTelegramNotification } from '../services/telegramService';
+import { sendTelegramNotification, sendTelegramPhoto } from '../services/telegramService';
 
 export const notifyOrder = async (req: Request, res: Response): Promise<void> => {
   const {
     type, text, templateStyle, material,
     width, height, price, aiPrompt, fontFamily,
-    userName, userEmail,
+    userName, userEmail, previewBase64,
   } = req.body;
 
   const materialLabel = material === 'GOLD' ? '🥇 ذهب 18 قيراط' : '🥈 فضة 925';
@@ -31,6 +31,12 @@ ${materialLabel}
 ⏰ ${new Date().toLocaleString('ar-EG', { timeZone: 'Africa/Cairo' })}
   `.trim();
 
-  await sendTelegramNotification(message);
+  if (previewBase64) {
+    await sendTelegramPhoto(previewBase64, message);
+  } else {
+    await sendTelegramNotification(message);
+  }
+
   res.status(200).json({ status: 'ok' });
 };
+
