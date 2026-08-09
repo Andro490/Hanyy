@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { getPricing, updatePricing, getGallery, createGalleryItem, deleteGalleryItem } from '../controllers/adminController';
-import { protect } from '../middleware/authMiddleware';
+import { authenticateUser } from '../middleware/security';
 
 const router = Router();
 
@@ -13,7 +13,7 @@ const adminOnly = (req: any, res: any, next: any) => {
   }
 };
 
-router.use(protect, adminOnly);
+router.use(authenticateUser, adminOnly);
 
 router.get('/pricing', getPricing);
 router.post('/pricing', updatePricing);
