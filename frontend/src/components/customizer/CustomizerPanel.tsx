@@ -261,13 +261,17 @@ export const CustomizerPanel = () => {
     <div className="w-full max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 p-6 bg-slate-900 rounded-3xl text-white shadow-2xl border border-slate-800">
       
       {/* 3D / Live Preview Area */}
-      <div className="flex flex-col items-center justify-center bg-slate-950 rounded-2xl p-6 relative overflow-hidden">
+      <div className="flex flex-col items-center justify-center bg-slate-950 rounded-2xl p-6 relative overflow-hidden min-h-[400px]">
         {/* Animated Grid Background */}
         <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:20px_20px] opacity-30"></div>
         
-        {/* Live Scaling Element */}
-        <motion.div
-          ref={previewRef}
+        {/* Static Wrapper for html-to-image (bypasses framer-motion transform bugs) */}
+        <div ref={previewRef} className="relative z-10 flex items-center justify-center w-full h-full">
+          {/* Force font loading inside the cloned node */}
+          <link href="https://fonts.googleapis.com/css2?family=Aref+Ruqaa:wght@400;700&family=Amiri:ital,wght@0,400;0,700;1,400&family=Reem+Kufi:wght@400;700&family=Tajawal:wght@400;700&family=Scheherazade+New:wght@400;700&family=Lateef:wght@400;700&family=Dancing+Script:wght@400;700&family=Great+Vibes&family=Pacifico&family=Sacramento&display=swap" rel="stylesheet" />
+          
+          {/* Live Scaling Element */}
+          <motion.div
           animate={{
             width: store.type === 'PRE_DESIGNED' ? 'auto' : store.width * 10,
             height: store.type === 'PRE_DESIGNED' ? 'auto' : store.height * 10,
@@ -313,9 +317,11 @@ export const CustomizerPanel = () => {
           ) : (
             <span style={{ fontFamily: store.fontFamily, color: store.textColor }} className="text-3xl transition-colors duration-500">{store.text || 'Preview'}</span>
           )}
-        </motion.div>
-        
-        <div className="absolute bottom-4 right-4 bg-slate-900/90 px-4 py-2 rounded-xl border border-slate-700 backdrop-blur-md">
+          </motion.div>
+        </div>
+
+        {/* Estimated Price Overlay */}
+        <div className="absolute bottom-4 right-4 bg-slate-900/90 backdrop-blur border border-slate-700 px-4 py-2 rounded-xl text-right">
           <p className="text-sm text-slate-400 font-medium">Estimated Price</p>
           <div className="flex items-center gap-2">
             <span className="text-2xl font-bold text-emerald-400">${store.price}</span>
