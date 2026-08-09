@@ -14,8 +14,11 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // Optionally redirect to login or clear auth state
-      window.location.href = '/login';
+      // Only redirect if we are strictly in a protected area to avoid infinite loops
+      const publicPaths = ['/login', '/register', '/'];
+      if (!publicPaths.includes(window.location.pathname)) {
+        window.location.href = '/login';
+      }
     }
     return Promise.reject(error);
   }
