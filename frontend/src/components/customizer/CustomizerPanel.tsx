@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { Settings, Sparkles, Box, Type, ShoppingCart, Check } from 'lucide-react';
 import { useCustomizerStore } from '../../store/customizerStore';
 import { usePricingEngine } from '../../hooks/usePricingEngine';
-import html2canvas from 'html2canvas';
+import * as htmlToImage from 'html-to-image';
 
 // Hand-drawn SVG Template Wrappers
 const CrownTemplate = ({ text, material, textColor, fontFamily }: { text: string; material: string; textColor: string; fontFamily: string }) => (
@@ -189,13 +189,14 @@ export const CustomizerPanel = () => {
     let previewBase64: string | null = null;
     if (previewRef.current) {
       try {
-        const canvas = await html2canvas(previewRef.current, {
-          background: '#0f172a',
-          scale: 2,
-          useCORS: true,
-          logging: false,
-        } as any);
-        previewBase64 = canvas.toDataURL('image/png');
+        previewBase64 = await htmlToImage.toPng(previewRef.current, {
+          backgroundColor: '#0f172a',
+          pixelRatio: 2,
+          style: {
+            transform: 'scale(1)',
+            transformOrigin: 'top left'
+          }
+        });
       } catch {
         // Screenshot failed silently
       }
