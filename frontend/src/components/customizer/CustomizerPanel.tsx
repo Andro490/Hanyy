@@ -194,7 +194,7 @@ export const CustomizerPanel = () => {
           scale: 2,
           useCORS: true,
           logging: false,
-        });
+        } as any);
         previewBase64 = canvas.toDataURL('image/png');
       } catch {
         // Screenshot failed silently
