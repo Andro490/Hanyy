@@ -247,12 +247,11 @@ export const CustomizerPanel = () => {
     setAiError(false);
 
     const materialLabel = store.material === 'GOLD' ? '18 karat gold' : '925 sterling silver';
-    // Kept simple so the AI focuses on spelling the text perfectly
-    const fullPrompt = `${store.aiPrompt.trim()}, ${materialLabel}, premium jewelry product photography, white background, no people`;
+    // Just use the exact prompt with minimal additions to keep the AI focused on the text
+    const fullPrompt = `${store.aiPrompt.trim()}, made of ${materialLabel}, high quality photorealistic jewelry product shot`;
     const encoded = encodeURIComponent(fullPrompt);
     const seed = Math.floor(Math.random() * 999999);
 
-    // Use 'flux' instead of 'turbo'. Flux is MUCH smarter and can spell text accurately like DALL-E.
     const url = `https://image.pollinations.ai/prompt/${encoded}?model=flux&width=512&height=512&nologo=true&seed=${seed}`;
     setAiImageUrl(url);
   };
