@@ -54,7 +54,7 @@ export const createGalleryItem = async (req: Request, res: Response, next: NextF
 export const deleteGalleryItem = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const { id } = req.params;
-    await prisma.galleryItem.delete({ where: { id } });
+    await prisma.galleryItem.delete({ where: { id: id as string } });
     res.status(200).json({ status: 'success', message: 'Item deleted' });
   } catch (error) {
     next(error);
