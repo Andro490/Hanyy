@@ -247,8 +247,10 @@ export const CustomizerPanel = () => {
     setAiError(false);
 
     const materialLabel = store.material === 'GOLD' ? '18 karat gold' : '925 sterling silver';
-    const fullPrompt = `jewelry product photography, ${store.aiPrompt.trim()}, ${materialLabel}, isolated on pure white background, no people, no hands, no models, macro shot, studio lighting, ultra detailed, 8k`;
+    const fullPrompt = `closeup jewelry product, ${store.aiPrompt.trim()}, ${materialLabel}, pure white background, studio lighting, macro photography, ultra sharp, 8k`;
+    const negativePrompt = `person, people, woman, man, girl, boy, face, body, hands, human, model, wearing, skin, hair`;
     const encoded = encodeURIComponent(fullPrompt);
+    const negativeEncoded = encodeURIComponent(negativePrompt);
     const seed = Math.floor(Math.random() * 999999);
 
     // Try fast models in order: turbo → flux-schnell → flux
@@ -256,7 +258,7 @@ export const CustomizerPanel = () => {
     let loaded = false;
 
     for (const model of models) {
-      const url = `https://image.pollinations.ai/prompt/${encoded}?model=${model}&width=512&height=512&nologo=true&seed=${seed}`;
+      const url = `https://image.pollinations.ai/prompt/${encoded}?model=${model}&negative=${negativeEncoded}&width=512&height=512&nologo=true&seed=${seed}`;
       
       const ok = await new Promise<boolean>((resolve) => {
         const img = new Image();
