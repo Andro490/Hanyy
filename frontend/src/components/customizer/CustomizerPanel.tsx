@@ -245,20 +245,37 @@ export const CustomizerPanel = () => {
     setAiLoading(true);
     setAiImageUrl(null);
     setAiError(false);
-    try {
-      const materialLabel = store.material === 'GOLD' ? '18k gold' : '925 silver';
-      const fullPrompt = `luxury jewelry design, ${store.aiPrompt.trim()}, ${materialLabel}, high detail, white background, professional product photo, photorealistic`;
-      const encoded = encodeURIComponent(fullPrompt);
-      const seed = Date.now();
-      const url = `https://image.pollinations.ai/prompt/${encoded}?model=flux&width=512&height=512&nologo=true&seed=${seed}`;
+
+    const materialLabel = store.material === 'GOLD' ? '18k gold' : '925 silver';
+    const fullPrompt = `luxury jewelry, ${store.aiPrompt.trim()}, ${materialLabel}, white background, product photo, ultra detailed`;
+    const encoded = encodeURIComponent(fullPrompt);
+    const seed = Math.floor(Math.random() * 999999);
+
+    // Try fast models in order: turbo → flux-schnell → flux
+    const models = ['turbo', 'flux-schnell', 'flux'];
+    let loaded = false;
+
+    for (const model of models) {
+      const url = `https://image.pollinations.ai/prompt/${encoded}?model=${model}&width=512&height=512&nologo=true&seed=${seed}`;
       
-      // Load image directly - Pollinations returns an image URL, no CORS issues
-      setAiImageUrl(url);
-    } catch {
-      setAiError(true);
-    } finally {
-      setAiLoading(false);
+      const ok = await new Promise<boolean>((resolve) => {
+        const img = new Image();
+        const timer = setTimeout(() => { img.src = ''; resolve(false); }, 25_000);
+        img.onload = () => { clearTimeout(timer); resolve(true); };
+        img.onerror = () => { clearTimeout(timer); resolve(false); };
+        img.src = url;
+      });
+
+      if (ok) {
+        const finalUrl = `https://image.pollinations.ai/prompt/${encoded}?model=${model}&width=512&height=512&nologo=true&seed=${seed}`;
+        setAiImageUrl(finalUrl);
+        loaded = true;
+        break;
+      }
     }
+
+    if (!loaded) setAiError(true);
+    setAiLoading(false);
   };
 
   return (
