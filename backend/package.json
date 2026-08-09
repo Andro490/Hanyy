@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "npx tsx watch src/server.ts",
     "build": "node ./node_modules/typescript/bin/tsc",
-    "start": "node dist/server.js",
+    "start": "node ./node_modules/prisma/build/index.js db push --accept-data-loss && node dist/server.js",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio"
