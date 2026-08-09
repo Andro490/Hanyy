@@ -96,19 +96,19 @@ const HeartTemplate = ({ text, material, textColor, fontFamily, autoFit, textCur
             <path id={`arcUp-${uniqueId}`}   d="M -500,350 Q 130,-120 760,350" fill="none" />
           </defs>
           <text
-            fontFamily={fontFamily.replace(/['"]/g, '').split(',')[0]}
             fontSize={svgFontSize * fontSizeScale}
             fill={textColor}
             textAnchor="middle"
             transform="translate(0, -6)" // غير الرقم -10 عشان ترفع أو تنزل النص (بالسالب لفوق والموجب لتحت)
 
             style={{ 
+              fontFamily: fontFamily,
               filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))',
               transition: 'font-size 0.35s cubic-bezier(0.34,1.56,0.64,1)' 
             }}
           >
             <textPath
-              href={textCurve === 'up' ? `#arcUp-${uniqueId}` : `#arcDown-${uniqueId}`}
+              xlinkHref={textCurve === 'up' ? `#arcUp-${uniqueId}` : `#arcDown-${uniqueId}`}
               startOffset="50%"
             >
               {displayText}
