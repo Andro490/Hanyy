@@ -15,7 +15,7 @@ const app: Application = express();
 // ── Security Middleware (Non-Negotiable) ──
 app.use(helmet());
 app.use(cors({
-  origin: ENV.FRONTEND_URL,
+  origin: [ENV.FRONTEND_URL, 'https://hanyy-six.vercel.app', 'http://localhost:5173'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
 }));
