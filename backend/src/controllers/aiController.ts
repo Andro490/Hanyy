@@ -21,7 +21,7 @@ export const generateAiImage = (req: Request, res: Response): void => {
 
   const options = {
     hostname: 'api-inference.huggingface.co',
-    path: '/models/black-forest-labs/FLUX.1-schnell',
+    path: '/models/stabilityai/stable-diffusion-xl-base-1.0',
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${hfToken}`,
