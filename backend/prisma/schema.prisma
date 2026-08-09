@@ -1,0 +1,84 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  name      String
+  role      Role     @default(USER)
+  orders    Order[]
+  designs   Design[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model PricingVariables {
+  id              Int      @id @default(1)
+  baseGoldPrice   Float
+  baseSilverPrice Float
+  manufacturingFee Float
+  updatedAt       DateTime @updatedAt
+}
+
+model ProductTemplate {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  type        String
+  basePrice   Float?
+  maxArea     Float?
+  minArea     Float?
+  designs     Design[]
+}
+
+model Design {
+  id          String   @id @default(uuid())
+  userId      String?
+  templateId  String?
+  type        String
+  text        String?
+  fontFamily  String?
+  width       Float
+  height      Float
+  material    String
+  calculatedPrice Float
+  aiPrompt    String?
+  imageUrl    String?
+  
+  user        User?            @relation(fields: [userId], references: [id])
+  template    ProductTemplate? @relation(fields: [templateId], references: [id])
+  orderItem   OrderItem?
+  createdAt   DateTime @default(now())
+}
+
+model Order {
+  id          String      @id @default(uuid())
+  userId      String
+  totalPrice  Float
+  status      String
+  items       OrderItem[]
+  user        User        @relation(fields: [userId], references: [id])
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+}
+
+model OrderItem {
+  id        String @id @default(uuid())
+  orderId   String
+  designId  String @unique
+  price     Float
+  
+  order     Order  @relation(fields: [orderId], references: [id])
+  design    Design @relation(fields: [designId], references: [id])
+}
