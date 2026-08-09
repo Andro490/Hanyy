@@ -15,14 +15,15 @@ export const calculatePrice = async (req: Request, res: Response, next: NextFunc
         const { width, height, material } = parsed;
 
         const pricingVariables = await prisma.pricingVariables.findFirst();
-        if (!pricingVariables) {
-            res.status(500).json({ status: 'error', message: 'Pricing variables not configured' });
-            return;
-        }
+
+        // Use defaults if no pricing config exists in DB yet
+        const baseGoldPrice = pricingVariables?.baseGoldPrice ?? 200;
+        const baseSilverPrice = pricingVariables?.baseSilverPrice ?? 80;
+        const manufacturingFee = pricingVariables?.manufacturingFee ?? 1.3;
 
         const area = width * height;
-        const basePrice = material === 'GOLD' ? pricingVariables.baseGoldPrice : pricingVariables.baseSilverPrice;
-        const calculatedPrice = area * basePrice * pricingVariables.manufacturingFee;
+        const basePrice = material === 'GOLD' ? baseGoldPrice : baseSilverPrice;
+        const calculatedPrice = area * basePrice * manufacturingFee;
 
         res.status(200).json({
             status: 'success',
