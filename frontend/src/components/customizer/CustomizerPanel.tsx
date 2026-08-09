@@ -240,44 +240,20 @@ export const CustomizerPanel = () => {
   };
 
 
-  const generateAiImage = async () => {
+  const generateAiImage = () => {
     if (!store.aiPrompt.trim()) return;
     setAiLoading(true);
     setAiImageUrl(null);
     setAiError(false);
 
     const materialLabel = store.material === 'GOLD' ? '18 karat gold' : '925 sterling silver';
-    const fullPrompt = `flat lay jewelry photography, ${store.aiPrompt.trim()}, ${materialLabel}, overhead shot, placed on white surface, product shot, no shadow, ultra sharp, 4k, professional`;
-    const negativePrompt = `person, people, woman, man, girl, boy, face, body, hands, human, skin, hair, portrait, realistic human`;
+    const fullPrompt = `jewelry product, ${store.aiPrompt.trim()}, ${materialLabel}, white background, flat lay, macro, no people, studio photo`;
     const encoded = encodeURIComponent(fullPrompt);
-    const negativeEncoded = encodeURIComponent(negativePrompt);
     const seed = Math.floor(Math.random() * 999999);
 
-    // Try fast models in order: turbo → flux-schnell → flux
-    const models = ['turbo', 'flux-schnell', 'flux'];
-    let loaded = false;
-
-    for (const model of models) {
-      const url = `https://image.pollinations.ai/prompt/${encoded}?model=${model}&negative_prompt=${negativeEncoded}&width=512&height=512&nologo=true&seed=${seed}`;
-      
-      const ok = await new Promise<boolean>((resolve) => {
-        const img = new Image();
-        const timer = setTimeout(() => { img.src = ''; resolve(false); }, 25_000);
-        img.onload = () => { clearTimeout(timer); resolve(true); };
-        img.onerror = () => { clearTimeout(timer); resolve(false); };
-        img.src = url;
-      });
-
-      if (ok) {
-        const finalUrl = `https://image.pollinations.ai/prompt/${encoded}?model=${model}&width=512&height=512&nologo=true&seed=${seed}`;
-        setAiImageUrl(finalUrl);
-        loaded = true;
-        break;
-      }
-    }
-
-    if (!loaded) setAiError(true);
-    setAiLoading(false);
+    // Set URL directly - onLoad/onError on the img tag handles the rest
+    const url = `https://image.pollinations.ai/prompt/${encoded}?model=turbo&width=512&height=512&nologo=true&seed=${seed}`;
+    setAiImageUrl(url);
   };
 
   return (
