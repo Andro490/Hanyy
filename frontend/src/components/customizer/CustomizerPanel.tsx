@@ -246,16 +246,14 @@ export const CustomizerPanel = () => {
     setAiImageUrl(null);
     setAiError(false);
     try {
-      const baseUrl = import.meta.env.PROD ? 'https://hanyy-production-166a.up.railway.app' : '';
-      const res = await fetch(`${baseUrl}/api/ai/generate-image`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: store.aiPrompt, material: store.material }),
-        signal: AbortSignal.timeout(95_000), // slightly longer than backend timeout
-      });
-      if (!res.ok) throw new Error('Failed');
-      const data = await res.json();
-      setAiImageUrl(data.imageUrl); // base64 data URL - no CORS issues!
+      const materialLabel = store.material === 'GOLD' ? '18k gold' : '925 silver';
+      const fullPrompt = `luxury jewelry design, ${store.aiPrompt.trim()}, ${materialLabel}, high detail, white background, professional product photo, photorealistic`;
+      const encoded = encodeURIComponent(fullPrompt);
+      const seed = Date.now();
+      const url = `https://image.pollinations.ai/prompt/${encoded}?model=flux&width=512&height=512&nologo=true&seed=${seed}`;
+      
+      // Load image directly - Pollinations returns an image URL, no CORS issues
+      setAiImageUrl(url);
     } catch {
       setAiError(true);
     } finally {
@@ -307,11 +305,21 @@ export const CustomizerPanel = () => {
                 <button onClick={generateAiImage} className="text-xs border border-red-400 px-3 py-1 rounded-lg hover:bg-red-400/10">إعادة المحاولة</button>
               </div>
             ) : aiImageUrl ? (
-              <img
-                src={aiImageUrl}
-                alt="AI Design"
-                className="max-w-full max-h-[280px] object-contain rounded-xl shadow-2xl"
-              />
+              <div className="relative w-full flex items-center justify-center">
+                {aiLoading && (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 z-10">
+                    <div className="w-10 h-10 border-4 border-purple-500 border-t-transparent rounded-full animate-spin" />
+                    <span className="text-slate-400 text-sm">جارٍ تحميل التصميم...</span>
+                  </div>
+                )}
+                <img
+                  src={aiImageUrl}
+                  alt="AI Design"
+                  className={`max-w-full max-h-[280px] object-contain rounded-xl shadow-2xl transition-opacity duration-500 ${aiLoading ? 'opacity-0' : 'opacity-100'}`}
+                  onLoad={() => setAiLoading(false)}
+                  onError={() => { setAiError(true); setAiLoading(false); }}
+                />
+              </div>
             ) : (
               <div className="flex flex-col items-center gap-2 text-slate-500">
                 <Sparkles className="w-10 h-10 animate-pulse" />
