@@ -192,11 +192,7 @@ export const CustomizerPanel = () => {
         await document.fonts.ready; // Ensure all fonts are fully loaded
         previewBase64 = await htmlToImage.toPng(previewRef.current, {
           backgroundColor: '#0f172a',
-          pixelRatio: 2,
-          style: {
-            transform: 'scale(1)',
-            transformOrigin: 'top left'
-          }
+          pixelRatio: 2
         });
       } catch {
         // Screenshot failed silently
@@ -282,7 +278,6 @@ export const CustomizerPanel = () => {
           }`}
           style={{ minWidth: '150px', minHeight: '80px', padding: '20px' }}
         >
-          <link href="https://fonts.googleapis.com/css2?family=Aref+Ruqaa:wght@400;700&family=Amiri:ital,wght@0,400;0,700;1,400&family=Reem+Kufi:wght@400;700&family=Tajawal:wght@400;700&family=Scheherazade+New:wght@400;700&family=Lateef:wght@400;700&family=Dancing+Script:wght@400;700&family=Great+Vibes&family=Pacifico&family=Sacramento&display=swap" rel="stylesheet" />
           {store.type === 'AI_GENERATED' ? (
             aiLoading && !aiImageUrl ? (
               <div className="flex flex-col items-center gap-3">
