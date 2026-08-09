@@ -246,8 +246,8 @@ export const CustomizerPanel = () => {
     setAiImageUrl(null);
     setAiError(false);
 
-    const materialLabel = store.material === 'GOLD' ? '18k gold' : '925 silver';
-    const fullPrompt = `luxury jewelry, ${store.aiPrompt.trim()}, ${materialLabel}, white background, product photo, ultra detailed`;
+    const materialLabel = store.material === 'GOLD' ? '18 karat gold' : '925 sterling silver';
+    const fullPrompt = `jewelry product photography, ${store.aiPrompt.trim()}, ${materialLabel}, isolated on pure white background, no people, no hands, no models, macro shot, studio lighting, ultra detailed, 8k`;
     const encoded = encodeURIComponent(fullPrompt);
     const seed = Math.floor(Math.random() * 999999);
 
