@@ -20,8 +20,8 @@ const loginSchema = z.object({
 // Helper to generate JWT and set HttpOnly cookie
 const signTokenAndSetCookie = (res: Response, userId: string, role: string) => {
   const token = jwt.sign({ id: userId, role }, ENV.JWT_SECRET, {
-    expiresIn: ENV.JWT_EXPIRES_IN as string,
-  });
+    expiresIn: ENV.JWT_EXPIRES_IN,
+  } as jwt.SignOptions);
 
   res.cookie('token', token, {
     httpOnly: true,
