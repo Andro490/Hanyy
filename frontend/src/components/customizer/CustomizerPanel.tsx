@@ -241,24 +241,21 @@ export const CustomizerPanel = () => {
   };
 
 
-  const generateAiImage = async () => {
+  const generateAiImage = () => {
     if (!store.aiPrompt.trim()) return;
     setAiLoading(true);
     setAiImageUrl(null);
     setAiError(false);
 
-    try {
-      const response = await api.post('/ai/generate-image', {
-        prompt: store.aiPrompt,
-        material: store.material,
-      }, { timeout: 120_000 }); // Increase timeout for AI generation
+    const materialLabel = store.material === 'GOLD' ? '18 karat gold' : '925 sterling silver';
+    const fullPrompt = `${store.aiPrompt.trim()}, made of ${materialLabel}, photorealistic jewelry product shot, white background, no people`;
+    const encoded = encodeURIComponent(fullPrompt);
+    const seed = Math.floor(Math.random() * 999999);
 
-      setAiImageUrl(response.data.imageUrl);
-    } catch (error) {
-      console.error(error);
-      setAiError(true);
-      setAiLoading(false);
-    }
+    // Call Pollinations directly from browser - works without any API key
+    const url = `https://image.pollinations.ai/prompt/${encoded}?model=flux&width=512&height=512&nologo=true&seed=${seed}`;
+    setAiImageUrl(url);
+    // Loading state resolved by img onLoad/onError handlers below
   };
 
   return (
