@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: '/api',
+  baseURL: import.meta.env.PROD ? 'https://hanyy-production-166a.up.railway.app/api' : '/api',
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json',

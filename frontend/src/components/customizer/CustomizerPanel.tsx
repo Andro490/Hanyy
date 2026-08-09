@@ -168,7 +168,8 @@ export const CustomizerPanel = () => {
     setAiImageUrl(null);
     setAiError(false);
     try {
-      const res = await fetch('/api/ai/generate-image', {
+      const baseUrl = import.meta.env.PROD ? 'https://hanyy-production-166a.up.railway.app' : '';
+      const res = await fetch(`${baseUrl}/api/ai/generate-image`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ prompt: store.aiPrompt, material: store.material }),
