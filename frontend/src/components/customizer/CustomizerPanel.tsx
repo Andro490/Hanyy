@@ -272,20 +272,20 @@ export const CustomizerPanel = () => {
           {/* Live Scaling Element */}
           <motion.div
           animate={{
-            width: store.type === 'PRE_DESIGNED' ? 'auto' : store.width * 10,
-            height: store.type === 'PRE_DESIGNED' ? 'auto' : store.height * 10,
+            width: store.type === 'PRE_DESIGNED' || aiImageUrl ? 'auto' : store.width * 10,
+            height: store.type === 'PRE_DESIGNED' || aiImageUrl ? 'auto' : store.height * 10,
             scaleX: store.type === 'PRE_DESIGNED' ? store.width / 5 : 1,
             scaleY: store.type === 'PRE_DESIGNED' ? store.height / (store.templateStyle === 'heart' ? 4 : 2) : 1,
           }}
           transition={{ type: 'spring', stiffness: 300, damping: 30 }}
           className={`flex items-center justify-center text-center shadow-[0_0_40px_rgba(0,0,0,0.5)] rounded-2xl border border-white/10 z-10 transition-colors duration-500 origin-center ${
-            store.type === 'PRE_DESIGNED' 
-              ? 'bg-transparent' // Remove yellow background for templates
+            store.type === 'PRE_DESIGNED' || aiImageUrl
+              ? 'bg-transparent shadow-none border-none' 
               : store.material === 'GOLD' 
                 ? 'bg-gradient-to-br from-yellow-400 to-yellow-600 text-yellow-950' 
                 : 'bg-gradient-to-br from-gray-200 to-gray-400 text-gray-900'
           }`}
-          style={{ minWidth: '150px', minHeight: '80px', padding: '20px' }}
+          style={{ minWidth: aiImageUrl ? 'auto' : '150px', minHeight: aiImageUrl ? 'auto' : '80px', padding: aiImageUrl ? '0' : '20px' }}
         >
           {store.type === 'AI_GENERATED' ? (
             aiLoading && !aiImageUrl ? (
@@ -310,7 +310,7 @@ export const CustomizerPanel = () => {
                 <img
                   src={aiImageUrl}
                   alt="AI Design"
-                  className={`max-w-full max-h-[280px] object-contain rounded-xl shadow-2xl transition-opacity duration-500 ${aiLoading ? 'opacity-0' : 'opacity-100'}`}
+                  className={`max-w-full max-h-[350px] object-contain rounded-xl shadow-2xl transition-opacity duration-500 ${aiLoading ? 'opacity-0' : 'opacity-100'}`}
                   onLoad={() => setAiLoading(false)}
                   onError={() => { setAiError(true); setAiLoading(false); }}
                 />
