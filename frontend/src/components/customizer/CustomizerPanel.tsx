@@ -190,7 +190,7 @@ export const CustomizerPanel = () => {
     if (previewRef.current) {
       try {
         const canvas = await html2canvas(previewRef.current, {
-          backgroundColor: '#0f172a',
+          background: '#0f172a',
           scale: 2,
           useCORS: true,
           logging: false,
