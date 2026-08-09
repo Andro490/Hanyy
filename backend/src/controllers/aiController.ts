@@ -17,7 +17,7 @@ export const generateAiImage = (req: Request, res: Response): void => {
   const materialLabel = material === 'GOLD' ? '18k gold' : '925 silver';
   const fullPrompt = `luxury jewelry design, ${prompt.trim()}, ${materialLabel}, high detail, white background, professional product photo, photorealistic`;
   const encoded = encodeURIComponent(fullPrompt);
-  const pollinationsUrl = `https://gen.pollinations.ai/image/${encoded}?model=flux&width=512&height=512&nologo=true&seed=${Date.now()}`;
+  const pollinationsUrl = `https://image.pollinations.ai/prompt/${encoded}?model=flux&width=512&height=512&nologo=true&seed=${Date.now()}`;
 
   const parsedUrl = new URL(pollinationsUrl);
 
@@ -35,8 +35,15 @@ export const generateAiImage = (req: Request, res: Response): void => {
     imageRes.on('data', (chunk: Buffer) => chunks.push(chunk));
 
     imageRes.on('end', () => {
+      const contentType = imageRes.headers['content-type'] || '';
+      
+      // If the API returns HTML (rate limit or error page) instead of an image, fail gracefully
+      if (!contentType.startsWith('image/')) {
+        res.status(500).json({ error: 'سيرفر الذكاء الاصطناعي مشغول حالياً، يرجى المحاولة بعد قليل.' });
+        return;
+      }
+
       const buffer = Buffer.concat(chunks);
-      const contentType = imageRes.headers['content-type'] || 'image/jpeg';
       const base64 = buffer.toString('base64');
       const dataUrl = `data:${contentType};base64,${base64}`;
       res.status(200).json({ imageUrl: dataUrl });

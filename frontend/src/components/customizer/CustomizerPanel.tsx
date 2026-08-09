@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { Settings, Sparkles, Box, Type, ShoppingCart, Check } from 'lucide-react';
 import { useCustomizerStore } from '../../store/customizerStore';
 import { usePricingEngine } from '../../hooks/usePricingEngine';
-import domtoimage from 'dom-to-image-more';
+import * as domtoimage from 'dom-to-image-more';
 
 // Hand-drawn SVG Template Wrappers
 const CrownTemplate = ({ text, material, textColor, fontFamily }: { text: string; material: string; textColor: string; fontFamily: string }) => (
@@ -199,7 +199,10 @@ export const CustomizerPanel = () => {
         // Small delay to ensure any CSS transitions (like curve) are settled
         await new Promise(resolve => setTimeout(resolve, 300));
         
-        previewBase64 = await domtoimage.toPng(previewRef.current, {
+        // Vite / CommonJS compat fallback
+        const captureFn = domtoimage.toPng || (domtoimage as any).default?.toPng;
+        
+        previewBase64 = await captureFn(previewRef.current, {
           bgcolor: '#0f172a',
           scale: 2
         });
