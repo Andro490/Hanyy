@@ -240,20 +240,31 @@ export const CustomizerPanel = () => {
   };
 
 
-  const generateAiImage = () => {
+  const generateAiImage = async () => {
     if (!store.aiPrompt.trim()) return;
     setAiLoading(true);
     setAiImageUrl(null);
     setAiError(false);
 
-    const materialLabel = store.material === 'GOLD' ? '18 karat gold' : '925 sterling silver';
-    // Sanitize: remove quotes and special chars that break URL encoding
-    const cleanPrompt = store.aiPrompt.trim().replace(/["""'']/g, '').replace(/[^\w\s,.-]/g, '');
-    // "flat lay" style = overhead product shot = naturally no people ever
-    const fullPrompt = `flat lay product photography, ${cleanPrompt}, ${materialLabel}, on white surface, professional studio shot, 8k`;
-    const encoded = encodeURIComponent(fullPrompt);
-    const seed = Math.floor(Math.random() * 999999);
-    setAiImageUrl(`https://image.pollinations.ai/prompt/${encoded}?model=flux&width=512&height=512&nologo=true&seed=${seed}`);
+    try {
+      const apiBase = import.meta.env.PROD
+        ? 'https://hanyy-production-166a.up.railway.app/api'
+        : '/api';
+      const response = await fetch(`${apiBase}/ai/generate-image`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: store.aiPrompt, material: store.material }),
+        signal: AbortSignal.timeout(120_000),
+      });
+
+      if (!response.ok) throw new Error('Backend AI failed');
+      const data = await response.json();
+      setAiImageUrl(data.imageUrl);
+    } catch (error) {
+      console.error('[AI]', error);
+      setAiError(true);
+      setAiLoading(false);
+    }
   };
 
   return (

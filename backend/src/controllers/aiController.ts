@@ -1,55 +1,7 @@
 import { Request, Response } from 'express';
 import https from 'https';
-import http from 'http';
-import { URL } from 'url';
 
-// Follow redirects automatically (https module doesn't do this by default)
-function fetchWithRedirects(urlStr: string, maxRedirects = 5): Promise<{ buffer: Buffer; contentType: string }> {
-  return new Promise((resolve, reject) => {
-    const doRequest = (currentUrl: string, redirectsLeft: number) => {
-      const parsed = new URL(currentUrl);
-      const lib = parsed.protocol === 'https:' ? https : http;
-
-      const options = {
-        hostname: parsed.hostname,
-        path: parsed.pathname + parsed.search,
-        method: 'GET',
-        headers: { 'User-Agent': 'HanyJewelry/1.0' },
-        timeout: 90_000,
-      };
-
-      const req = lib.request(options, (res) => {
-        // Follow redirect
-        if ([301, 302, 303, 307, 308].includes(res.statusCode ?? 0) && res.headers.location) {
-          if (redirectsLeft === 0) {
-            reject(new Error('Too many redirects'));
-            return;
-          }
-          const nextUrl = res.headers.location.startsWith('http')
-            ? res.headers.location
-            : `${parsed.protocol}//${parsed.hostname}${res.headers.location}`;
-          doRequest(nextUrl, redirectsLeft - 1);
-          return;
-        }
-
-        const chunks: Buffer[] = [];
-        res.on('data', (chunk: Buffer) => chunks.push(chunk));
-        res.on('end', () => {
-          const contentType = res.headers['content-type'] || '';
-          resolve({ buffer: Buffer.concat(chunks), contentType });
-        });
-      });
-
-      req.on('timeout', () => { req.destroy(); reject(new Error('Request timeout')); });
-      req.on('error', reject);
-      req.end();
-    };
-
-    doRequest(urlStr, maxRedirects);
-  });
-}
-
-export const generateAiImage = async (req: Request, res: Response): Promise<void> => {
+export const generateAiImage = (req: Request, res: Response): void => {
   const { prompt, material } = req.body as { prompt: string; material: string };
 
   if (!prompt || prompt.trim().length === 0) {
@@ -57,25 +9,69 @@ export const generateAiImage = async (req: Request, res: Response): Promise<void
     return;
   }
 
+  const apiKey = process.env.IDEOGRAM_API_KEY;
+  if (!apiKey) {
+    res.status(500).json({ error: 'IDEOGRAM_API_KEY not set on server' });
+    return;
+  }
+
   const materialLabel = material === 'GOLD' ? '18 karat gold' : '925 sterling silver';
-  const fullPrompt = `flat lay overhead, ${prompt.trim()}, made of ${materialLabel}, white marble surface, professional product photography, no people`;
-  const encoded = encodeURIComponent(fullPrompt);
-  const seed = Date.now();
-  const url = `https://image.pollinations.ai/prompt/${encoded}?model=flux&width=512&height=512&nologo=true&seed=${seed}`;
+  // Ideogram is excellent at typography. We make sure to emphasize the text rendering.
+  const fullPrompt = `A high quality, photorealistic macro product shot of a ${materialLabel} nameplate necklace. The necklace clearly spells the text: "${prompt.trim()}". Flat lay on a clean white marble background, studio lighting, highly detailed.`;
 
-  try {
-    const { buffer, contentType } = await fetchWithRedirects(url);
-
-    if (!contentType.startsWith('image/')) {
-      console.error('[Pollinations non-image]', contentType, buffer.toString('utf-8').slice(0, 200));
-      res.status(500).json({ error: 'سيرفر الذكاء الاصطناعي مشغول حالياً، يرجى المحاولة بعد قليل.' });
-      return;
+  const body = JSON.stringify({
+    image_request: {
+      prompt: fullPrompt,
+      aspect_ratio: "ASPECT_1_1",
+      model: "V_2",
+      magic_prompt_option: "AUTO"
     }
+  });
 
-    const base64 = buffer.toString('base64');
-    res.status(200).json({ imageUrl: `data:${contentType};base64,${base64}` });
-  } catch (err: any) {
+  const options = {
+    hostname: 'api.ideogram.ai',
+    path: '/generate',
+    method: 'POST',
+    headers: {
+      'Api-Key': apiKey,
+      'Content-Type': 'application/json',
+      'Content-Length': Buffer.byteLength(body),
+    },
+    timeout: 90_000,
+  };
+
+  const request = https.request(options, (hfRes) => {
+    const chunks: Buffer[] = [];
+    hfRes.on('data', (chunk: Buffer) => chunks.push(chunk));
+    hfRes.on('end', () => {
+      const buffer = Buffer.concat(chunks);
+      const text = buffer.toString('utf-8');
+      
+      try {
+        const json = JSON.parse(text);
+        if (json.data && json.data[0] && json.data[0].url) {
+          res.status(200).json({ imageUrl: json.data[0].url });
+        } else {
+          console.error('[Ideogram Error]', json);
+          res.status(500).json({ error: 'سيرفر الذكاء الاصطناعي مشغول حالياً، يرجى المحاولة بعد قليل.' });
+        }
+      } catch (e) {
+        console.error('[Ideogram Parse Error]', text);
+        res.status(500).json({ error: 'سيرفر الذكاء الاصطناعي مشغول حالياً، يرجى المحاولة بعد قليل.' });
+      }
+    });
+  });
+
+  request.on('timeout', () => {
+    request.destroy();
+    res.status(504).json({ error: 'Image generation timed out. Please try again.' });
+  });
+
+  request.on('error', (err: Error) => {
     console.error('[AI Image Error]', err.message);
     res.status(500).json({ error: 'Failed to generate image. Please try again.' });
-  }
+  });
+
+  request.write(body);
+  request.end();
 };
