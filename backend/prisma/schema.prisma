@@ -37,9 +37,19 @@ model ProductTemplate {
   description String?
   type        String
   basePrice   Float?
+  imageUrl    String?
   maxArea     Float?
   minArea     Float?
   designs     Design[]
+}
+
+model GalleryItem {
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  imageUrl    String
+  price       Float?
+  createdAt   DateTime @default(now())
 }
 
 model Design {

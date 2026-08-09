@@ -65,6 +65,7 @@ export const RegisterPage = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [role, setRole] = useState('USER');
   const [showPassword, setShowPassword] = useState(false);
   const { register, isLoading, error, clearError } = useAuthStore();
   const navigate = useNavigate();
@@ -72,7 +73,7 @@ export const RegisterPage = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await register(name, email, password);
+      await register(name, email, password, role);
       navigate('/');
     } catch { /* error handled by store */ }
   };
@@ -109,6 +110,13 @@ export const RegisterPage = () => {
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
+            </div>
+            <div>
+              <label className="text-sm text-white/60 mb-1.5 flex items-center gap-1.5"><User size={14} /> Account Type</label>
+              <select value={role} onChange={(e) => setRole(e.target.value)} className="input-dark w-full appearance-none">
+                <option value="USER">Guest / User</option>
+                <option value="ADMIN">Admin</option>
+              </select>
             </div>
             <button type="submit" disabled={isLoading} className="btn-primary w-full !py-3.5 disabled:opacity-50">
               {isLoading ? 'Creating account...' : 'Create Account'}

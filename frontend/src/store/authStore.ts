@@ -9,7 +9,7 @@ interface AuthStore {
   error: string | null;
 
   login: (email: string, password: string) => Promise<void>;
-  register: (name: string, email: string, password: string) => Promise<void>;
+  register: (name: string, email: string, password: string, role?: string) => Promise<void>;
   logout: () => Promise<void>;
   checkAuth: () => Promise<void>;
   clearError: () => void;
@@ -35,10 +35,10 @@ export const useAuthStore = create<AuthStore>((set) => ({
     }
   },
 
-  register: async (name, email, password) => {
+  register: async (name, email, password, role = 'USER') => {
     set({ isLoading: true, error: null });
     try {
-      const res = await api.post('/auth/register', { name, email, password });
+      const res = await api.post('/auth/register', { name, email, password, role });
       set({ user: res.data.data, isAuthenticated: true, isLoading: false });
     } catch (err: any) {
       set({

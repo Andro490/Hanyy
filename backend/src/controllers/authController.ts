@@ -10,6 +10,7 @@ const registerSchema = z.object({
   name: z.string().min(2).max(100).trim(),
   email: z.string().email().max(255).trim().toLowerCase(),
   password: z.string().min(8).max(128),
+  role: z.enum(['USER', 'ADMIN']).optional(),
 });
 
 const loginSchema = z.object({
@@ -51,6 +52,7 @@ export const register = async (req: Request, res: Response, next: NextFunction):
         name: parsed.name,
         email: parsed.email,
         password: hashedPassword,
+        role: parsed.role || 'USER',
       },
     });
 

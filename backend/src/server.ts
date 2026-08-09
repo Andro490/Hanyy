@@ -10,6 +10,8 @@ import pricingRoutes from './routes/pricingRoutes';
 import customizerRoutes from './routes/customizerRoutes';
 import aiRoutes from './routes/aiRoutes';
 import orderRoutes from './routes/orderRoutes';
+import adminRoutes from './routes/adminRoutes';
+import galleryRoutes from './routes/galleryRoutes';
 
 const app: Application = express();
 
@@ -38,6 +40,8 @@ app.use('/api/pricing', pricingRoutes);
 app.use('/api/customizer', customizerRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/orders', orderRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/gallery', galleryRoutes);
 
 // Health Check
 app.get('/api/health', (_req: Request, res: Response) => {

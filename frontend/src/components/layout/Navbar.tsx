@@ -99,9 +99,16 @@ export const Navbar = () => {
               ))}
               <div className="border-t border-white/10 pt-3 mt-2 flex flex-col gap-2">
                 {isAuthenticated ? (
-                  <button onClick={() => { logout(); setIsOpen(false); }} className="px-4 py-3 text-sm text-red-400 text-left">
-                    Logout
-                  </button>
+                  <>
+                    {user?.role === 'ADMIN' && (
+                      <Link to="/admin" onClick={() => setIsOpen(false)} className="px-4 py-3 text-sm text-brand-gold text-left font-bold flex items-center gap-2">
+                        <LayoutDashboard size={16} /> Admin Dashboard
+                      </Link>
+                    )}
+                    <button onClick={() => { logout(); setIsOpen(false); }} className="px-4 py-3 text-sm text-red-400 text-left flex items-center gap-2">
+                      <LogOut size={16} /> Logout
+                    </button>
+                  </>
                 ) : (
                   <>
                     <Link to="/login" onClick={() => setIsOpen(false)} className="px-4 py-3 text-sm text-white/80">Login</Link>

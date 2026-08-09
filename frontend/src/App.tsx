@@ -5,6 +5,7 @@ import { Footer } from './components/layout/Footer';
 import { HomePage } from './pages/HomePage';
 import { CustomizerPage } from './pages/CustomizerPage';
 import { LoginPage, RegisterPage } from './pages/AuthPages';
+import { AdminPage } from './pages/AdminPage';
 import { useAuthStore } from './store/authStore';
 
 function App() {
@@ -23,6 +24,7 @@ function App() {
           <Route path="/customizer" element={<CustomizerPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
+          <Route path="/admin" element={<AdminPage />} />
         </Routes>
       </main>
       <Footer />
