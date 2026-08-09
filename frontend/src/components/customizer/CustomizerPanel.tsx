@@ -254,7 +254,7 @@ export const CustomizerPanel = () => {
         "https://api-inference.huggingface.co/models/black-forest-labs/FLUX.1-schnell",
         {
           headers: {
-            Authorization: "Bearer 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",
+            Authorization: `Bearer ${import.meta.env.VITE_HF_TOKEN}`,
             "Content-Type": "application/json",
           },
           method: "POST",
