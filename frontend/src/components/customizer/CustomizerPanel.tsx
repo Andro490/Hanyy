@@ -240,20 +240,38 @@ export const CustomizerPanel = () => {
   };
 
 
-  const generateAiImage = () => {
+  const generateAiImage = async () => {
     if (!store.aiPrompt.trim()) return;
     setAiLoading(true);
     setAiImageUrl(null);
     setAiError(false);
 
     const materialLabel = store.material === 'GOLD' ? '18 karat gold' : '925 sterling silver';
-    // Just use the exact prompt with minimal additions to keep the AI focused on the text
     const fullPrompt = `${store.aiPrompt.trim()}, made of ${materialLabel}, high quality photorealistic jewelry product shot`;
-    const encoded = encodeURIComponent(fullPrompt);
-    const seed = Math.floor(Math.random() * 999999);
 
-    const url = `https://image.pollinations.ai/prompt/${encoded}?model=flux&width=512&height=512&nologo=true&seed=${seed}`;
-    setAiImageUrl(url);
+    try {
+      const response = await fetch(
+        "https://api-inference.huggingface.co/models/black-forest-labs/FLUX.1-schnell",
+        {
+          headers: {
+            Authorization: "Bearer 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",
+            "Content-Type": "application/json",
+          },
+          method: "POST",
+          body: JSON.stringify({ inputs: fullPrompt }),
+        }
+      );
+
+      if (!response.ok) throw new Error("Generation failed");
+
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      setAiImageUrl(url);
+    } catch (error) {
+      console.error(error);
+      setAiError(true);
+      setAiLoading(false);
+    }
   };
 
   return (
