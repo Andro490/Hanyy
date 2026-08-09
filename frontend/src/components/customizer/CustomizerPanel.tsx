@@ -1,8 +1,9 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Settings, Sparkles, Box, Type } from 'lucide-react';
+import { Settings, Sparkles, Box, Type, ShoppingCart, Check } from 'lucide-react';
 import { useCustomizerStore } from '../../store/customizerStore';
 import { usePricingEngine } from '../../hooks/usePricingEngine';
+import { useNavigate } from 'react-router-dom';
 
 // Hand-drawn SVG Template Wrappers
 const CrownTemplate = ({ text, material, textColor, fontFamily }: { text: string; material: string; textColor: string; fontFamily: string }) => (
@@ -156,11 +157,37 @@ const renderTemplate = (style: string, text: string, material: string, textColor
 };
 
 export const CustomizerPanel = () => {
+  const navigate = useNavigate();
   const store = useCustomizerStore();
   const { isLoading, error } = usePricingEngine();
   const [aiImageUrl, setAiImageUrl] = React.useState<string | null>(null);
   const [aiLoading, setAiLoading] = React.useState(false);
   const [aiError, setAiError] = React.useState(false);
+  const [addedToCart, setAddedToCart] = React.useState(false);
+
+  const handleAddToCart = () => {
+    // Save design to localStorage cart
+    const cart = JSON.parse(localStorage.getItem('hany_cart') || '[]');
+    cart.push({
+      id: Date.now(),
+      type: store.type,
+      text: store.text,
+      templateStyle: store.templateStyle,
+      material: store.material,
+      width: store.width,
+      height: store.height,
+      price: store.price,
+      aiPrompt: store.aiPrompt,
+      aiImageUrl: aiImageUrl,
+      fontFamily: store.fontFamily,
+      addedAt: new Date().toISOString(),
+    });
+    localStorage.setItem('hany_cart', JSON.stringify(cart));
+
+    // Show success feedback
+    setAddedToCart(true);
+    setTimeout(() => setAddedToCart(false), 2500);
+  };
 
   const generateAiImage = async () => {
     if (!store.aiPrompt.trim()) return;
@@ -470,8 +497,19 @@ export const CustomizerPanel = () => {
 
         </div>
 
-        <button className="w-full py-4 mt-auto bg-gradient-to-r from-blue-600 to-emerald-600 hover:from-blue-500 hover:to-emerald-500 text-white rounded-xl font-bold shadow-lg shadow-blue-500/25 transition-all active:scale-95">
-          Add to Cart • ${store.price}
+        <button
+          onClick={handleAddToCart}
+          className={`w-full py-4 mt-auto font-bold rounded-xl shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2 ${
+            addedToCart
+              ? 'bg-emerald-600 shadow-emerald-500/25 text-white'
+              : 'bg-gradient-to-r from-blue-600 to-emerald-600 hover:from-blue-500 hover:to-emerald-500 text-white shadow-blue-500/25'
+          }`}
+        >
+          {addedToCart ? (
+            <><Check size={18} /> تمت الإضافة للسلة!</>
+          ) : (
+            <><ShoppingCart size={18} /> Add to Cart • ${store.price}</>
+          )}
         </button>
 
       </div>
