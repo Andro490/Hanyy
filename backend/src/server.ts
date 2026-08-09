@@ -9,6 +9,7 @@ import authRoutes from './routes/authRoutes';
 import pricingRoutes from './routes/pricingRoutes';
 import customizerRoutes from './routes/customizerRoutes';
 import aiRoutes from './routes/aiRoutes';
+import orderRoutes from './routes/orderRoutes';
 
 const app: Application = express();
 
@@ -36,6 +37,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/pricing', pricingRoutes);
 app.use('/api/customizer', customizerRoutes);
 app.use('/api/ai', aiRoutes);
+app.use('/api/orders', orderRoutes);
 
 // Health Check
 app.get('/api/health', (_req: Request, res: Response) => {

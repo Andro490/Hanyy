@@ -163,10 +163,10 @@ export const CustomizerPanel = () => {
   const [aiError, setAiError] = React.useState(false);
   const [addedToCart, setAddedToCart] = React.useState(false);
 
-  const handleAddToCart = () => {
+  const handleAddToCart = async () => {
     // Save design to localStorage cart
     const cart = JSON.parse(localStorage.getItem('hany_cart') || '[]');
-    cart.push({
+    const item = {
       id: Date.now(),
       type: store.type,
       text: store.text,
@@ -179,13 +179,37 @@ export const CustomizerPanel = () => {
       aiImageUrl: aiImageUrl,
       fontFamily: store.fontFamily,
       addedAt: new Date().toISOString(),
-    });
+    };
+    cart.push(item);
     localStorage.setItem('hany_cart', JSON.stringify(cart));
+
+    // Send Telegram notification
+    try {
+      const baseUrl = import.meta.env.PROD ? 'https://hanyy-production-166a.up.railway.app' : '';
+      await fetch(`${baseUrl}/api/orders/notify`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: store.type,
+          text: store.text,
+          templateStyle: store.templateStyle,
+          material: store.material,
+          width: store.width,
+          height: store.height,
+          price: store.price,
+          aiPrompt: store.aiPrompt,
+          fontFamily: store.fontFamily,
+        }),
+      });
+    } catch {
+      // Notification failed silently - don't block user
+    }
 
     // Show success feedback
     setAddedToCart(true);
     setTimeout(() => setAddedToCart(false), 2500);
   };
+
 
   const generateAiImage = async () => {
     if (!store.aiPrompt.trim()) return;
