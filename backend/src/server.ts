@@ -14,6 +14,7 @@ import adminRoutes from './routes/adminRoutes';
 import galleryRoutes from './routes/galleryRoutes';
 
 const app: Application = express();
+app.set('trust proxy', 1); // Trust the Railway proxy for secure cookies and rate limiting
 
 // ── Security Middleware (Non-Negotiable) ──
 app.use(helmet());
