@@ -12,6 +12,7 @@ import aiRoutes from './routes/aiRoutes';
 import orderRoutes from './routes/orderRoutes';
 import adminRoutes from './routes/adminRoutes';
 import galleryRoutes from './routes/galleryRoutes';
+import './config/passport'; // Initialize Google OAuth strategy
 
 const app: Application = express();
 app.set('trust proxy', 1); // Trust the Railway proxy for secure cookies and rate limiting

@@ -128,3 +128,27 @@ export const getMe = async (req: Request, res: Response, next: NextFunction): Pr
     next(error);
   }
 };
+
+// ── GOOGLE OAUTH CALLBACK ──
+export const googleCallback = (req: Request, res: Response): void => {
+  const user = (req as any).user;
+  if (!user) {
+    res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/login?error=google_failed`);
+    return;
+  }
+
+  // Sign JWT and set cookie
+  const token = jwt.sign({ id: user.id, role: user.role }, ENV.JWT_SECRET, {
+    expiresIn: ENV.JWT_EXPIRES_IN,
+  } as jwt.SignOptions);
+
+  res.cookie('token', token, {
+    httpOnly: true,
+    secure: true,
+    sameSite: 'none',
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+  });
+
+  // Redirect back to frontend
+  res.redirect(`${ENV.FRONTEND_URL}?google_auth=success`);
+};

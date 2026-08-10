@@ -9,6 +9,9 @@ export const ENV = {
   JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN || '7d',
   FRONTEND_URL: process.env.FRONTEND_URL || 'http://localhost:5173',
   AI_API_KEY: process.env.AI_API_KEY || '',
+  GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID || '',
+  GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET || '',
+  BACKEND_URL: process.env.BACKEND_URL || 'http://localhost:5000',
 };
 
 // Validate critical env vars at startup
